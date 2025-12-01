@@ -38,11 +38,11 @@ return require('packer').startup(function(use)
 
   -- Colorschemes --
   use 'habamax/vim-alchemist'
-  use 'bluz71/vim-moonfly-colors'
-  use 'shaunsingh/nord.nvim'
-  use 'tomasiser/vim-code-dark'
+  -- use 'bluz71/vim-moonfly-colors'
+  -- use 'shaunsingh/nord.nvim'
+  -- use 'tomasiser/vim-code-dark'
   use 'sainnhe/everforest'
-  use 'habamax/vim-gruvbit'
+  -- use 'habamax/vim-gruvbit'
   use 'embark-theme/vim'
 
   use {
@@ -68,12 +68,12 @@ return require('packer').startup(function(use)
     end
   }
 
-  use {
-    'simrat39/symbols-outline.nvim',
-    config = function() 
-      require("symbols-outline").setup()
-    end
-  }
+  -- use {
+  --   'simrat39/symbols-outline.nvim',
+  --   config = function() 
+  --     require("symbols-outline").setup()
+  --   end
+  -- }
 
   -- Telescope related plugins --
   use {
@@ -276,6 +276,9 @@ return require('packer').startup(function(use)
     'kkoomen/vim-doge',
     run = ':call doge#install()'
   }
+  vim.g.doge_comment_interactive = 0
+  pcall(vim.cmd, '')
+
 
   -- use {
   --   'kevinhwang91/nvim-ufo',
@@ -320,6 +323,10 @@ return require('packer').startup(function(use)
 
   -- use { 'averms/black-nvim' }
 
+  use { 'RaafatTurki/hex.nvim' }
+  require("hex").setup({})
 
+    -- Packer
+  use "sindrets/diffview.nvim"
 
 end)

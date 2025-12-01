@@ -20,7 +20,8 @@ require('lspconfig')['clangd'].setup{
   on_attach = on_attach,
   flags = lsp_flags,
   capabilities = capabilities,
-  cmd = { "clangd", "--completion-style=detailed" },
+  -- cmd = { "clangd", "--completion-style=detailed"},
+  cmd = { "clangd",  "--query-driver=/usr/bin/g++-12" },
 }
 
 require('lspconfig')['pyright'].setup{
@@ -30,31 +31,27 @@ require('lspconfig')['pyright'].setup{
   settings = {
     python = {
       analysis = {
-        typeCheckingMode = "basic"
+        typeCheckingMode = "basic",
+        ignore = { "conanfile.py" }
       }
     },
   }
 }
 
 -- https://luals.github.io/#neovim-install
-require('lspconfig')['lua_ls'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-  settings = {
-    Lua = {
-      completion = {
-        enable = true,
-      },
-      diagnostics = { globals = { 'vim' }}
-    }
-  }
-}
-require('lspconfig')['tsserver'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-}
+-- require('lspconfig')['lua_ls'].setup{
+--   on_attach = on_attach,
+--   flags = lsp_flags,
+--   capabilities = capabilities,
+--   settings = {
+--     Lua = {
+--       completion = {
+--         enable = true,
+--       },
+--       diagnostics = { globals = { 'vim' }}
+--     }
+--   }
+-- }
 require('lspconfig')['rust_analyzer'].setup{
   on_attach = on_attach,
   flags = lsp_flags,
@@ -80,7 +77,28 @@ require('lspconfig')['gopls'].setup{
   capabilities = capabilities,
 }
 
+require('lspconfig')['bashls'].setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilities = capabilities,
+}
+require('lspconfig')['cmake'].setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilities = capabilities,
+}
+require('lspconfig')['asm_lsp'].setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilities = capabilities,
+}
 require('lspconfig')['omnisharp'].setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilities = capabilities,
+}
+
+require('lspconfig')['yamlls'].setup{
   on_attach = on_attach,
   flags = lsp_flags,
   capabilities = capabilities,
