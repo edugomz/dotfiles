@@ -49,9 +49,12 @@ map('n', '<leader>tc', ':tabclose<cr>')
 map('n', '<leader>to', ':tabonly<cr>')
 
 --- Plugin
-map('n', '<leader>e', ':NvimTreeToggle<cr>')
+map('n', '<leader>e', ':NvimTreeFindFileToggle<cr>')
+map('n', '<leader>c', ':NvimTreeCollapse<cr>')
 
-map('n', '<C-J>', ':Telescope find_files<cr>')
+
+-- map('n', '<C-J>', ':Telescope find_files<cr>')
+map('n', '<C-J>', ':Telescope frecency workspace=CWD<cr>')
 
 map('n', '<C-p>', ':Telescope oldfiles<cr>')
 map('n', '<C-h>', ':Telescope lsp_document_symbols<cr>')
@@ -76,6 +79,7 @@ map('n', '<leader>gd', ':SignifyDiff<cr>')
 map('n', '<leader>gu', ':SignifyHunkUndo<cr>')
 
 map('n', '<leader>ca', ':lua vim.lsp.buf.code_action()<cr>')
+map('n', '<leader>ld', ':Lspsaga show_cursor_diagnostics<cr>')
 
 -- TODO: improve
 map('n', '<leader>hh', ':lua require("lspconfig")["clangd"].commands.ClangdSwitchSourceHeader[1]()<cr>')
