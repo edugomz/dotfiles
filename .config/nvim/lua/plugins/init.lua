@@ -29,8 +29,8 @@ require('lazy').setup({
   },
 
   {
-    'kyazdani42/nvim-tree.lua',
-    dependencies = { 'kyazdani42/nvim-web-devicons' },
+    'nvim-tree/nvim-tree.lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
       require('plugins.nvim-tree')
     end,
@@ -147,7 +147,6 @@ require('lazy').setup({
   },
 
   -- Editing utilities
-  { 'tomtom/tcomment_vim' },
   { 'sickill/vim-pasta' },
   { 'tpope/vim-surround' },
   { 'junegunn/vim-easy-align' },
@@ -183,12 +182,24 @@ require('lazy').setup({
   { 'rbong/vim-flog' },
 
   {
-    'mhinz/vim-signify',
-    init = function()
-      vim.g.signify_sign_change = '~'
-    end,
+    'lewis6991/gitsigns.nvim',
     config = function()
-      vim.cmd "highlight SignifySignChange ctermfg=yellow guifg=#ffff00 cterm=NONE gui=NONE"
+      require('gitsigns').setup({
+        signs = {
+          change = { text = '~' },
+        },
+        on_attach = function(bufnr)
+          local gs = require('gitsigns')
+          local map = function(k, v)
+            vim.keymap.set('n', k, v, { silent = true, buffer = bufnr })
+          end
+          map('<leader>gh', gs.preview_hunk)
+          map('<leader>gd', gs.diffthis)
+          map('<leader>gu', gs.reset_hunk)
+          map(']c', function() gs.nav_hunk('next') end)
+          map('[c', function() gs.nav_hunk('prev') end)
+        end,
+      })
     end,
   },
 

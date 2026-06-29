@@ -64,9 +64,6 @@ map('n', '<leader>s',  function() require('spectre').open() end)
 map('n', '<leader>sw', function() require('spectre').open_visual({ select_word = true }) end)
 
 -- Git
-map('n', '<leader>gh', '<cmd>SignifyHunkDiff<cr>')
-map('n', '<leader>gd', '<cmd>SignifyDiff<cr>')
-map('n', '<leader>gu', '<cmd>SignifyHunkUndo<cr>')
 map('n', '<leader>gs', '<cmd>tab Git<cr>')
 map('n', '<leader>gz', '<cmd>Git add %<cr>')
 
