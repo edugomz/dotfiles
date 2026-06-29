@@ -2,15 +2,11 @@ local function map(m, k, v)
   vim.keymap.set(m, k, v, { silent = true })
 end
 
----@param m string
----@param k string
----@param commands table list of comamnds to toggle
----
 local function setToggleMap(m, k, commands)
   vim.keymap.set(m, k, (function()
     local active = false
     return function()
-      if(not active) then
+      if not active then
         vim.cmd(commands[1])
       else
         vim.cmd(commands[2])
@@ -23,92 +19,69 @@ end
 map('i', 'jk', '<ESC>')
 map('i', 'JK', '<ESC>')
 
-map('n', 'j', 'gj')
-map('n', 'k', 'gk')
-
 -- Search and replace in visual mode
-vim.cmd('vnoremap <C-r> "hy:.,$s/<C-r>h//gc<left><left><left>')
+map('v', '<C-r>', '"hy:.,$s/<C-r>h//gc<left><left><left>')
 
--- " j, k          Store relative line number jumps in the jumplist.
-vim.keymap.set("n", "k", "(v:count > 5 ? 'm`' . v:count : '') . 'k'", { noremap = true, expr = true, silent = true })
-vim.keymap.set("n", "j", "(v:count > 5 ? 'm`' . v:count : '') . 'j'", { noremap = true, expr = true, silent = true })
+-- Store large j/k jumps in jumplist
+vim.keymap.set('n', 'k', function()
+  return (vim.v.count > 5 and 'm`' .. vim.v.count or '') .. 'k'
+end, { noremap = true, expr = true, silent = true })
+vim.keymap.set('n', 'j', function()
+  return (vim.v.count > 5 and 'm`' .. vim.v.count or '') .. 'j'
+end, { noremap = true, expr = true, silent = true })
 
 -- Search exact word
-vim.cmd('nnoremap <leader>/ /\\<\\><left><left>')
+map('n', '<leader>/', '/\\<\\><left><left>')
 
 -- Exit terminal
-vim.cmd('tnoremap jk <c-\\><c-n>')
-vim.cmd('tnoremap JK <c-\\><c-n>')
+map('t', 'jk', '<C-\\><C-n>')
+map('t', 'JK', '<C-\\><C-n>')
+map('t', '<Esc>', '<C-\\><C-n>')
 
-vim.cmd('tnoremap <Esc> <C-\\><C-n>')
+map('n', '<leader>w', '<cmd>w!<cr>')
+map('n', '<leader>tn', '<cmd>tabedit %<cr>')
+map('n', '<leader>tc', '<cmd>tabclose<cr>')
+map('n', '<leader>to', '<cmd>tabonly<cr>')
 
+-- File tree
+map('n', '<leader>e', '<cmd>NvimTreeFindFileToggle<cr>')
+map('n', '<leader>c', '<cmd>NvimTreeCollapse<cr>')
 
-map('n', '<leader>w', ':w!<cr>')
-map('n', '<leader>tn', ':tabedit %<cr>')
-map('n', '<leader>tc', ':tabclose<cr>')
-map('n', '<leader>to', ':tabonly<cr>')
+-- Telescope
+map('n', '<C-J>', '<cmd>Telescope frecency workspace=CWD<cr>')
+map('n', '<C-p>', '<cmd>Telescope oldfiles<cr>')
+map('n', '<C-h>', '<cmd>Telescope lsp_document_symbols<cr>')
+map('n', '<C-n>', '<cmd>Telescope lsp_dynamic_workspace_symbols<cr>')
+map('n', '<leader>gy', '<cmd>Telescope registers<cr>')
+map('n', '<leader>gl', '<cmd>Telescope live_grep<cr>')
+map('n', '<leader>gg', '<cmd>Telescope grep_string<cr>')
 
---- Plugin
-map('n', '<leader>e', ':NvimTreeFindFileToggle<cr>')
-map('n', '<leader>c', ':NvimTreeCollapse<cr>')
+-- Terminal
+map('n', '<leader>;', '<cmd>FloatermToggle<cr>')
 
+-- Spectre
+map('n', '<leader>s',  function() require('spectre').open() end)
+map('n', '<leader>sw', function() require('spectre').open_visual({ select_word = true }) end)
 
--- map('n', '<C-J>', ':Telescope find_files<cr>')
-map('n', '<C-J>', ':Telescope frecency workspace=CWD<cr>')
+-- Git
+map('n', '<leader>gh', '<cmd>SignifyHunkDiff<cr>')
+map('n', '<leader>gd', '<cmd>SignifyDiff<cr>')
+map('n', '<leader>gu', '<cmd>SignifyHunkUndo<cr>')
+map('n', '<leader>gs', '<cmd>tab Git<cr>')
+map('n', '<leader>gz', '<cmd>Git add %<cr>')
 
-map('n', '<C-p>', ':Telescope oldfiles<cr>')
-map('n', '<C-h>', ':Telescope lsp_document_symbols<cr>')
-map('n', '<C-n>', ':Telescope lsp_dynamic_workspace_symbols<cr>')
+-- LSP
+map('n', '<leader>ca', vim.lsp.buf.code_action)
+map('n', '<leader>ld', '<cmd>Lspsaga show_cursor_diagnostics<cr>')
+map('n', '<leader>hh', function()
+  require('lspconfig')['clangd'].commands.ClangdSwitchSourceHeader[1]()
+end)
 
-map('n', '<leader>gy', ':Telescope registers<cr>')
+-- Replace word under cursor from current line to end of file
+map('n', '<leader>r', ':.,$s/\\v(<C-r><C-w>)/<C-r><C-w>/g<Left><Left>')
 
-map('n', '<leader>gl', ':Telescope live_grep<cr>')
-map('n', '<leader>gg', ':Telescope grep_string<cr>')
-
-
-map('n', '<leader>;', ':FloatermToggle<cr>')
-
-map('n', '<leader>s', ':lua require("spectre").open()<cr>')
-map('n', '<leader>sw', ':lua require("spectre").open_visual({select_word = true})<cr>')
-
-
-map('n', '<leader>hp', ':lua require("harpoon.mark").add_file()<cr>')
-
-map('n', '<leader>gh', ':SignifyHunkDiff<cr>')
-map('n', '<leader>gd', ':SignifyDiff<cr>')
-map('n', '<leader>gu', ':SignifyHunkUndo<cr>')
-
-map('n', '<leader>ca', ':lua vim.lsp.buf.code_action()<cr>')
-map('n', '<leader>ld', ':Lspsaga show_cursor_diagnostics<cr>')
-
--- TODO: improve
-map('n', '<leader>hh', ':lua require("lspconfig")["clangd"].commands.ClangdSwitchSourceHeader[1]()<cr>')
-
--- from current to file end: .,$, all file: %
-vim.cmd('nnoremap <leader>r :.,$s/\\v(<<C-r><C-w>>)/<C-r><C-w>/g<Left><Left>')
-
--- TODO: try telescope-undo
--- TODO fails if tab closed manually
-setToggleMap('n', 'U',
-  {'tabedit % | UndotreeToggle',
-  'UndotreeToggle | tabclose'})
-
-map('n', '<leader>gs', ':tab Git<cr>')
-map('n', '<leader>gz', ':Git add %<cr>')
-
--- vim.cmd [[
--- " name.s.h split len is 2
--- " name.s   split len is 1
--- function! ToggleAsmHpp()
---    let file_array = split(expand('%:r'), '\.')
---    if len(file_array) == 1
---       :e %:r.h.s
--- 	elseif len(file_array) == 2
---       exe 'e ' . file_array[0] . '.s'
--- 	end
--- endfunction
--- ]]
-
--- map('n', '<leader>hh', ':ClangSwitchSourceHeader<cr>')
--- map('n', '<leader>hh', ':call ToggleAsmHpp()<cr>')
-
+-- Undotree toggle
+setToggleMap('n', 'U', {
+  'tabedit % | UndotreeToggle',
+  'UndotreeToggle | tabclose',
+})
