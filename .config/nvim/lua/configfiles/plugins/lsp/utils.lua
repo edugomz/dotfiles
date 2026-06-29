@@ -1,6 +1,5 @@
-Utils = {}
+local Utils = {}
 
--- Add additional capabilities supported by nvim-cmp
 function Utils.capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   return require('cmp_nvim_lsp').default_capabilities(capabilities)
@@ -8,8 +7,7 @@ end
 
 function Utils.mappings(bufnr)
   local opts = { noremap=true, silent=true }
-  -- Enable completion triggered by <c-x><c-o>
-  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
 
   vim.keymap.set('n', '<space>gd', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
@@ -30,10 +28,7 @@ function Utils.mappings(bufnr)
   vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
   vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
-  -- vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
   vim.keymap.set('n', 'gr', ':Telescope lsp_references<cr>', bufopts)
-  -- vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting, bufopts)
-
 end
 
 return Utils

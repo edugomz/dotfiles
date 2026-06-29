@@ -9,8 +9,8 @@ o.updatetime = 200
 o.number = true
 o.cursorline = true
 o.scrolloff = 4
-vim.cmd 'set noshowmode'
-vim.cmd 'set colorcolumn=80'
+o.showmode = false
+o.colorcolumn = '80'
 
 ----- 
 o.expandtab = true
@@ -43,7 +43,12 @@ g.maplocalleader = ' '
 -- vim.opt.listchars:append "trail:⌁"
 -- vim.opt.listchars:append "tab:┊\"
 
-vim.cmd 'autocmd FileType * setlocal formatoptions-=ro'
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = function()
+    vim.opt_local.formatoptions:remove({ 'r', 'o' })
+  end,
+})
 
 vim.api.nvim_create_autocmd('BufWrite', {
   pattern = "*.tex",
@@ -55,7 +60,3 @@ vim.api.nvim_create_autocmd({'BufNewFile', 'BufRead'}, {
   command = 'setf glsl'
 })
 
--- filetypes
--- vim.cmd [[
---   au BufNewFile,BufRead   *.vs,*.fs,*.glsl   setf glsl
--- ]]

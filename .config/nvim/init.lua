@@ -2,6 +2,6 @@ require('configfiles.settings')
 require('configfiles.plugins')
 require('configfiles.keybinds')
 
-vim.cmd("set clipboard=unnamedplus")
+vim.o.clipboard = 'unnamedplus'
 
 pcall(vim.cmd, 'colorscheme everforest')

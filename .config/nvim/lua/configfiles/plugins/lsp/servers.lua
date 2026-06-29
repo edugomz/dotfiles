@@ -37,12 +37,6 @@ vim.lsp.config('rust_analyzer', {
 })
 vim.lsp.enable('rust_analyzer')
 
-vim.lsp.config('cmake', {
-  on_attach = on_attach,
-  capabilities = capabilities,
-})
-vim.lsp.enable('cmake')
-
 vim.lsp.config('gopls', {
   on_attach = on_attach,
   capabilities = capabilities,
