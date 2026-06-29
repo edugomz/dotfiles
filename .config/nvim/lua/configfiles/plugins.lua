@@ -22,7 +22,7 @@ require('lazy').setup({
 
   {
     'nvim-treesitter/nvim-treesitter',
-    commit = "fa915a30",
+    build = ':TSUpdate',
     config = function()
       require('configfiles.plugins.treesitter')
     end
@@ -45,7 +45,7 @@ require('lazy').setup({
 
   -- Telescope
   {
-    'nvim-telescope/telescope.nvim', tag = '0.1.5',
+    'nvim-telescope/telescope.nvim',
     dependencies = { 'nvim-lua/plenary.nvim' },
     config = function()
       require("telescope").setup({
@@ -72,7 +72,6 @@ require('lazy').setup({
 
   {
     "nvim-telescope/telescope-frecency.nvim",
-    version = "*",
     config = function()
       require("telescope").load_extension "frecency"
     end,
@@ -174,7 +173,6 @@ require('lazy').setup({
 
   {
     'akinsho/git-conflict.nvim',
-    tag = "*",
     config = function()
       require('git-conflict').setup({
         default_mappings = true,
