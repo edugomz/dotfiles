@@ -81,6 +81,7 @@ require('lazy').setup({
   -- LSP
   {
     'neovim/nvim-lspconfig',
+    dependencies = { 'williamboman/mason.nvim', 'williamboman/mason-lspconfig.nvim' },
     config = function()
       require('configfiles.plugins.lsp.servers')
     end
@@ -89,11 +90,20 @@ require('lazy').setup({
   { 'p00f/clangd_extensions.nvim' },
 
   {
-    'williamboman/nvim-lsp-installer',
-    dependencies = { 'neovim/nvim-lspconfig' },
+    'williamboman/mason.nvim',
     config = function()
-      require("nvim-lsp-installer").setup({})
-    end
+      require('mason').setup()
+    end,
+  },
+
+  {
+    'williamboman/mason-lspconfig.nvim',
+    dependencies = { 'williamboman/mason.nvim' },
+    config = function()
+      require('mason-lspconfig').setup({
+        ensure_installed = { 'pyright', 'rust_analyzer', 'cmake', 'gopls' },
+      })
+    end,
   },
 
   { 'Issafalcon/lsp-overloads.nvim' },
