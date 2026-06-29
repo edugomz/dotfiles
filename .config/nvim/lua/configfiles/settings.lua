@@ -37,12 +37,6 @@ o.splitright = true
 g.mapleader = ' '
 g.maplocalleader = ' '
 
--- o.termguicolors = true
-
--- vim.opt.list = true
--- vim.opt.listchars:append "trail:⌁"
--- vim.opt.listchars:append "tab:┊\"
-
 vim.api.nvim_create_autocmd('FileType', {
   pattern = '*',
   callback = function()
