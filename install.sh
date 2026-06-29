@@ -1,11 +1,5 @@
 #!/bin/sh
 
-function install_nvim_pack() {
-  echo "Installing nvim packer"
-  git clone --depth 1 https://github.com/wbthomason/packer.nvim\
-  ~/.local/share/nvim/site/pack/packer/start/packer.nvim
-}
-
 function link_dotfile_dir() {
   ln -s ~/.dotfiles/.config/$1 ~/.config/$1
 }
@@ -15,13 +9,16 @@ function link_dirs() {
   ln -s ~/.dotfiles/.gitconfig ~/.gitconfig
 
   echo "Linking dirs"
-  link_dotfile_dir "alacritty"
+  # link_dotfile_dir "alacritty"
   link_dotfile_dir "nvim"
-  link_dotfile_dir "i3"
-  link_dotfile_dir "i3status"
+  # link_dotfile_dir "i3"
+  # link_dotfile_dir "i3status"
+  # link_dotfile_dir "i3status-contrib"
+  # init submodule ...
 
-  #needed for nvim session save
-  mkdir .local/share/nvim/session
+  # needed for mini.nvim session save
+  mkdir -p ~/.local/share/nvim/session
+  # lazy.nvim bootstraps itself on first nvim launch — no manual step needed
 }
 
 function create_dotfiles_dir() {
@@ -49,4 +46,6 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-create_dotfiles_dir
+# create_dotfiles_dir
+link_dirs
+

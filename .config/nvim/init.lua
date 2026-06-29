@@ -1,7 +1,6 @@
-require('configfiles.settings')
-require('configfiles.plugins')
-require('configfiles.keybinds')
-
-vim.cmd("set clipboard=unnamedplus")
+require('config.options')
+require('config.autocmds')
+require('plugins')
+require('config.keymaps')
 
 pcall(vim.cmd, 'colorscheme everforest')

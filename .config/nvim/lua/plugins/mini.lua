@@ -35,7 +35,7 @@ starter.setup({
   items = {
     starter.sections.sessions(100, true),
     { name = 'Git'      , action = 'G | only',   section = 'Actions' },
-    { name = 'Update plugins'      , action = 'PackerUpdate',   section = 'Actions' },
+    { name = 'Update plugins'      , action = 'Lazy update',   section = 'Actions' },
     starter.sections.builtin_actions(),
   },
   header = header_art,
