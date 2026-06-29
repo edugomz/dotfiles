@@ -1,18 +1,20 @@
 local g = vim.g
 local o = vim.o
 
+g.mapleader = ' '
+g.maplocalleader = ' '
+
 -- Decrease update time
 o.timeoutlen = 500
 o.updatetime = 200
 
------ 
 o.number = true
 o.cursorline = true
 o.scrolloff = 4
 o.showmode = false
 o.colorcolumn = '80'
+o.clipboard = 'unnamedplus'
 
------ 
 o.expandtab = true
 o.wrap = true
 o.breakindent = true
@@ -24,33 +26,9 @@ o.shiftwidth = 2
 o.ignorecase = true
 o.smartcase = true
 
--- Undo and backup optionssett
 o.backup = false
 o.writebackup = false
 o.undofile = true
 o.swapfile = false
 
-
---- Buffer split
 o.splitright = true
-
-g.mapleader = ' '
-g.maplocalleader = ' '
-
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = '*',
-  callback = function()
-    vim.opt_local.formatoptions:remove({ 'r', 'o' })
-  end,
-})
-
-vim.api.nvim_create_autocmd('BufWrite', {
-  pattern = "*.tex",
-  command = 'TexlabBuild'
-})
-
-vim.api.nvim_create_autocmd({'BufNewFile', 'BufRead'}, {
-  pattern = {'*.vs', '*fs'},
-  command = 'setf glsl'
-})
-

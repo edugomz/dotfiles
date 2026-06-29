@@ -1,4 +1,4 @@
-local utils = require('configfiles.plugins.lsp.utils')
+local utils = require('plugins.lsp.utils')
 
 local capabilities = utils.capabilities()
 

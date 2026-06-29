@@ -24,7 +24,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     config = function()
-      require('configfiles.plugins.treesitter')
+      require('plugins.treesitter')
     end
   },
 
@@ -32,14 +32,14 @@ require('lazy').setup({
     'kyazdani42/nvim-tree.lua',
     dependencies = { 'kyazdani42/nvim-web-devicons' },
     config = function()
-      require('configfiles.plugins.nvim-tree')
+      require('plugins.nvim-tree')
     end,
   },
 
   {
     'nvim-lualine/lualine.nvim',
     config = function()
-      require('configfiles.plugins.lualine')
+      require('plugins.lualine')
     end
   },
 
@@ -82,7 +82,7 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = { 'williamboman/mason.nvim', 'williamboman/mason-lspconfig.nvim' },
     config = function()
-      require('configfiles.plugins.lsp.servers')
+      require('plugins.lsp.servers')
     end
   },
 
@@ -140,7 +140,7 @@ require('lazy').setup({
       }
     },
     config = function()
-      require('configfiles.plugins.lsp.nvim-cmp')
+      require('plugins.lsp.nvim-cmp')
     end,
   },
 
@@ -208,7 +208,7 @@ require('lazy').setup({
   {
     'echasnovski/mini.nvim',
     config = function()
-      require('configfiles.plugins.mini')
+      require('plugins.mini')
     end
   },
 
