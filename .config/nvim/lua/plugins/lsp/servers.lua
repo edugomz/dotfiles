@@ -9,11 +9,11 @@ local on_attach = function(client, bufnr)
   end
 end
 
--- system-installed; custom flag needed for cross-compilation header resolution
+-- clangd is system-installed (not Mason-managed); compiler flags go in
+-- a per-project .clangd file or ~/.config/clangd/config.yaml
 vim.lsp.config('clangd', {
   on_attach = on_attach,
   capabilities = capabilities,
-  cmd = { "clangd", "--query-driver=/usr/bin/g++-12" },
 })
 vim.lsp.enable('clangd')
 
