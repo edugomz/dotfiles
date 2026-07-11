@@ -7,6 +7,7 @@ function link_dotfile_dir() {
 function link_dirs() {
   echo "Linking files"
   ln -s ~/.dotfiles/.gitconfig ~/.gitconfig
+  ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
 
   echo "Linking dirs"
   # link_dotfile_dir "alacritty"
