@@ -11,6 +11,7 @@ function link_dirs() {
   echo "Linking dirs"
   # link_dotfile_dir "alacritty"
   link_dotfile_dir "nvim"
+  link_dotfile_dir "wezterm"
   # link_dotfile_dir "i3"
   # link_dotfile_dir "i3status"
   # link_dotfile_dir "i3status-contrib"
