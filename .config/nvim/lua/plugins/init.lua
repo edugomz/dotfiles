@@ -241,6 +241,8 @@ require('lazy').setup({
     opts = {
       processor = "magick_cli",
       hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.avif" },
+      max_width_window_percentage = 100,
+      max_height_window_percentage = 100,
     },
   },
 
