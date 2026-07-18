@@ -17,32 +17,28 @@ vim.lsp.config('clangd', {
 })
 vim.lsp.enable('clangd')
 
--- Mason-managed servers. The default handler applies on_attach + capabilities
--- to every installed server. Add a named handler only for servers that need
--- custom settings. To add a new server: add it to ensure_installed; no other
--- change needed unless it requires custom settings.
-require('mason-lspconfig').setup({
-  ensure_installed = { 'pyright', 'rust_analyzer', 'gopls' },
-  handlers = {
-    function(server_name)
-      require('lspconfig')[server_name].setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-      })
-    end,
-    ['pyright'] = function()
-      require('lspconfig').pyright.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          python = {
-            analysis = {
-              typeCheckingMode = "basic",
-              ignore = { "conanfile.py" },
-            },
-          },
-        },
-      })
-    end,
+-- Mason-managed servers. `vim.lsp.config('*', ...)` applies on_attach +
+-- capabilities to every server (mason-lspconfig's `automatic_enable` calls
+-- `vim.lsp.enable` for whatever's installed, merging in this base config).
+-- Add a named `vim.lsp.config(name, ...)` override only for servers that
+-- need custom settings. To add a new server: add it to ensure_installed; no
+-- other change needed unless it requires custom settings.
+vim.lsp.config('*', {
+  on_attach = on_attach,
+  capabilities = capabilities,
+})
+
+vim.lsp.config('pyright', {
+  settings = {
+    python = {
+      analysis = {
+        typeCheckingMode = "basic",
+        ignore = { "conanfile.py" },
+      },
+    },
   },
+})
+
+require('mason-lspconfig').setup({
+  ensure_installed = { 'pyright', 'rust_analyzer', 'gopls', 'marksman' },
 })

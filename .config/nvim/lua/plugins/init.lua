@@ -243,7 +243,32 @@ require('lazy').setup({
       hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.avif" },
       max_width_window_percentage = 100,
       max_height_window_percentage = 100,
+      window_overlap_clear_enabled = true,
+      tmux_show_only_in_active_window = true,
     },
+    config = function(_, opts)
+      require("image").setup(opts)
+      -- image.nvim's tmux pane-tty lookup omits `-t $TMUX_PANE`, so with several tmux
+      -- windows open it can resolve to an unrelated pane and send the clear escape
+      -- there instead, leaving stale images on screen. Pin the query to our own pane.
+      local pane_id = vim.env.TMUX_PANE
+      if pane_id then
+        require("image/utils/tmux").get_pane_tty = function()
+          return vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "-t", pane_id, "#{pane_tty}" }))
+        end
+      end
+    end,
   },
+
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
+    ft = { 'markdown' },
+    config = function()
+      require('render-markdown').setup({})
+    end,
+  },
+
+  require('plugins.claudecode'),
 
 })
