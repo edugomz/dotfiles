@@ -72,8 +72,12 @@ require('lazy').setup({
 
   {
     "nvim-telescope/telescope-frecency.nvim",
-    config = function()
+    opts = {
+      db_safe_mode = false,
+    },
+    config = function(_, opts)
       require("telescope").load_extension "frecency"
+      require("telescope").setup { extensions = { frecency = opts } }
     end,
   },
 
