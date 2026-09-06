@@ -273,6 +273,14 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'hat0uma/csvview.nvim',
+    ft = { 'csv', 'tsv' },
+    config = function()
+      require('csvview').setup({})
+    end,
+  },
+
   require('plugins.claudecode'),
 
 })
