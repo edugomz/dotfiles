@@ -76,8 +76,8 @@ require('lazy').setup({
       db_safe_mode = false,
     },
     config = function(_, opts)
-      require("telescope").load_extension "frecency"
       require("telescope").setup { extensions = { frecency = opts } }
+      require("telescope").load_extension "frecency"
     end,
   },
 
