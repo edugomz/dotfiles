@@ -269,7 +269,9 @@ require('lazy').setup({
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     ft = { 'markdown' },
     config = function()
-      require('render-markdown').setup({})
+      require('render-markdown').setup({
+        pipe_table = { enabled = false },
+      })
     end,
   },
 
@@ -278,6 +280,32 @@ require('lazy').setup({
     ft = { 'csv', 'tsv' },
     config = function()
       require('csvview').setup({})
+    end,
+  },
+
+  {
+    'ice345/markdown-table-wrap.nvim',
+    ft = { 'markdown', 'quarto', 'rmd', 'rmarkdown' },
+    config = function()
+      -- table-wrap's virtual-text cells re-render code spans with its own
+      -- highlight group instead of the buffer's real syntax highlighting, and
+      -- strips any linked background by default to avoid filled rectangles.
+      -- Pull both the real code fg (treesitter/colorscheme) and render-markdown's
+      -- background chip back in explicitly so cells match the rest of the buffer.
+      local code_fg = vim.api.nvim_get_hl(0, { name = '@markup.raw.markdown_inline', link = false })
+      local code_bg = vim.api.nvim_get_hl(0, { name = 'ColorColumn', link = false })
+      require('markdown-table-wrap').setup({
+        max_col_width = 220,
+        highlight_preset = 'render_markdown',
+        highlights = {
+          code = {
+            fg = code_fg.fg,
+            ctermfg = code_fg.ctermfg,
+            bg = code_bg.bg,
+            ctermbg = code_bg.ctermbg,
+          },
+        },
+      })
     end,
   },
 
