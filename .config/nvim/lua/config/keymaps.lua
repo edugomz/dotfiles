@@ -77,6 +77,9 @@ end)
 -- Replace word under cursor from current line to end of file
 map('n', '<leader>r', ':.,$s/\\v(<C-r><C-w>)/<C-r><C-w>/g<Left><Left>')
 
+-- Copy current file path (as shown by <C-g>) to clipboard
+map('n', '<leader>yp', '<cmd>let @+ = fnamemodify(expand("%"), ":.")<cr>')
+
 -- Undotree toggle
 setToggleMap('n', 'U', {
   'tabedit % | UndotreeToggle',
