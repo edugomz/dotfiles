@@ -269,8 +269,14 @@ require('lazy').setup({
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     ft = { 'markdown' },
     config = function()
+      -- obsidian-query renders dataview/query fences through these handlers
+      local has_oq, oq = pcall(require, 'obsidian-query')
       require('render-markdown').setup({
         pipe_table = { enabled = false },
+        custom_handlers = has_oq and {
+          markdown = oq.handler,
+          markdown_inline = require('obsidian-query.inline').handler,
+        } or nil,
       })
     end,
   },
@@ -310,5 +316,7 @@ require('lazy').setup({
   },
 
   require('plugins.claudecode'),
+
+  require('plugins.obsidian'),
 
 })
