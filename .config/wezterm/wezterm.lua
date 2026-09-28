@@ -14,4 +14,6 @@ config.keys = {
 	},
 }
 
+config.enable_wayland = false  -- restores old X11 behavior, Mutter draws the frame again
+
 return config
