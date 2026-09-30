@@ -8,6 +8,8 @@ function link_dirs() {
   echo "Linking files"
   ln -s ~/.dotfiles/.gitconfig ~/.gitconfig
   ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+  mkdir -p ~/.local/bin
+  ln -s ~/.dotfiles/bin/tp ~/.local/bin/tp
 
   echo "Linking dirs"
   # link_dotfile_dir "alacritty"

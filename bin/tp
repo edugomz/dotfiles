@@ -1,0 +1,21 @@
+#!/bin/sh
+# tp [dir] - one tmux session per project dir: window "nvim" + window "claude".
+# Re-running for a project that already has a session just switches to it.
+set -e
+dir=$(realpath "${1:-.}")
+# ponytail: session name = dir basename, two repos with the same basename share a session
+name=$(basename "$dir" | sed 's/^\.//; s/[.:]/_/g')
+
+if ! tmux has-session -t "=$name" 2>/dev/null; then
+  # send-keys instead of a window command, so quitting nvim/claude leaves a shell
+  tmux new-session -d -s "$name" -c "$dir" -n nvim
+  tmux send-keys -t "=$name:nvim" nvim Enter
+  tmux new-window -d -t "=$name:" -c "$dir" -n claude
+  tmux send-keys -t "=$name:claude" claude Enter
+fi
+
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t "=$name"
+else
+  tmux attach-session -t "=$name"
+fi
