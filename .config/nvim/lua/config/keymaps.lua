@@ -67,6 +67,31 @@ map('n', '<leader>sw', function() require('spectre').open_visual({ select_word =
 map('n', '<leader>gs', '<cmd>tab Git<cr>')
 map('n', '<leader>gz', '<cmd>Git add %<cr>')
 map('n', '<leader>gw', function() require('config.worktrees').pick() end)
+-- Pick a local branch (main/master preselected) and diff the current branch
+-- against where it forked from it.
+map('n', '<leader>gm', function()
+  local current = vim.trim(vim.fn.system({ 'git', 'branch', '--show-current' }))
+  local branches = vim.tbl_filter(function(b) return b ~= current end,
+    vim.fn.systemlist({ 'git', 'for-each-ref', '--format=%(refname:short)', 'refs/heads' }))
+  table.sort(branches, function(a, b)
+    local da, db = a == 'main' or a == 'master', b == 'main' or b == 'master'
+    if da ~= db then return da end
+    return a < b
+  end)
+  local actions, state = require('telescope.actions'), require('telescope.actions.state')
+  require('telescope.pickers').new({}, {
+    prompt_title = 'Diff ' .. current .. ' against',
+    finder = require('telescope.finders').new_table({ results = branches }),
+    sorter = require('telescope.config').values.generic_sorter({}),
+    attach_mappings = function(bufnr)
+      actions.select_default:replace(function()
+        actions.close(bufnr)
+        vim.cmd('DiffviewOpen ' .. state.get_selected_entry().value .. '...HEAD')
+      end)
+      return true
+    end,
+  }):find()
+end)
 
 -- LSP
 map('n', '<leader>ca', vim.lsp.buf.code_action)
