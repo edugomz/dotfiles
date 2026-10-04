@@ -243,24 +243,46 @@ require('lazy').setup({
     "3rd/image.nvim",
     build = false,
     opts = {
+      -- WezTerm's kitty graphics support is partial (off by default, and redraws
+      -- erase image cells); sixel works in WezTerm and passes through tmux >= 3.4.
+      backend = "sixel",
       processor = "magick_cli",
       hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.avif" },
       max_width_window_percentage = 100,
       max_height_window_percentage = 100,
       window_overlap_clear_enabled = true,
       tmux_show_only_in_active_window = true,
+      integrations = {
+        markdown = {
+          -- markdown-table-wrap shows table-bearing docs in a derived Reader buffer
+          -- named markdown-table-wrap://reader/<bufnr>/<file>, so relative image
+          -- paths would resolve against that fake name. Use the Source file's path.
+          resolve_image_path = function(document_path, image_path, fallback)
+            local reader = document_path:match("^markdown%-table%-wrap://reader/(%d+)/")
+            if reader then
+              local ok, mtw = pcall(require, "markdown-table-wrap")
+              local source = ok and mtw.resolve_source_buffer(tonumber(reader))
+              if source then document_path = vim.api.nvim_buf_get_name(source) end
+            end
+            return fallback(document_path, image_path)
+          end,
+        },
+      },
     },
     config = function(_, opts)
-      require("image").setup(opts)
-      -- image.nvim's tmux pane-tty lookup omits `-t $TMUX_PANE`, so with several tmux
-      -- windows open it can resolve to an unrelated pane and send the clear escape
-      -- there instead, leaving stale images on screen. Pin the query to our own pane.
-      local pane_id = vim.env.TMUX_PANE
-      if pane_id then
-        require("image/utils/tmux").get_pane_tty = function()
-          return vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "-t", pane_id, "#{pane_tty}" }))
+      local image = require("image")
+      image.setup(opts)
+      -- A full redraw wipes sixel images, but image.nvim only repaints when an image's
+      -- geometry changes. Keep the default <C-l> and queue every visible image again.
+      vim.keymap.set("n", "<C-l>", function()
+        vim.cmd("nohlsearch|diffupdate|normal! \12")
+        for _, img in ipairs(image.get_images()) do
+          if img.is_rendered then
+            img:clear(true)
+            img:render()
+          end
         end
-      end
+      end, { desc = "Redraw screen and repaint images" })
     end,
   },
 
