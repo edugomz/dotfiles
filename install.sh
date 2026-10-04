@@ -10,6 +10,9 @@ function link_dirs() {
   ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
   mkdir -p ~/.local/bin
   ln -s ~/.dotfiles/bin/tp ~/.local/bin/tp
+  # tmux plugins (resurrect + continuum) via TPM
+  [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  ~/.tmux/plugins/tpm/bin/install_plugins
 
   echo "Linking dirs"
   # link_dotfile_dir "alacritty"

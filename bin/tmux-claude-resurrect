@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# tmux-resurrect hooks that bring every claude pane back with its own conversation.
+#   save <state-file>     @resurrect-hook-post-save-layout: appends "claude" lines to the snapshot
+#   restore <state-file>  @resurrect-hook-post-restore-all: runs `claude --resume <id>` in those panes
+# resurrect only parses pane/window/state/grouped_session lines, so the extra lines
+# ride along with the snapshot they describe and get pruned with it.
+# Session ids come from Claude Code's ~/.claude/sessions/<pid>.json registry; a claude
+# process belongs to the pane whose shell is its parent.
+# ponytail: that registry is internal to Claude Code; if it changes, claude panes come back as plain shells.
+set -euo pipefail
+
+save() {
+  local state=$1 f pid sid ppid
+  declare -A pane_for
+  while IFS=$'\t' read -r shell_pid target; do
+    pane_for[$shell_pid]=$target
+  done < <(tmux list-panes -a -F $'#{pane_pid}\t#{session_name}\t#{window_index}\t#{pane_index}')
+
+  for f in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/sessions/*.json; do
+    [ -f "$f" ] || continue
+    IFS=$'\t' read -r pid sid < <(jq -r '[.pid // "", .sessionId // ""] | @tsv' "$f") || continue
+    [ -n "$pid" ] && [ -n "$sid" ] || continue
+    ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ') || continue
+    [ -n "${pane_for[$ppid]:-}" ] || continue
+    printf 'claude\t%s\t%s\n' "${pane_for[$ppid]}" "$sid" >>"$state"
+  done
+}
+
+restore() {
+  local state=$1 session window pane sid target
+  grep $'^claude\t' "$state" | while IFS=$'\t' read -r _ session window pane sid; do
+    target="=$session:$window.$pane"
+    # only type into a pane that is sitting at a shell prompt
+    case $(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null) in
+    zsh | bash | sh | fish) tmux send-keys -t "$target" "claude --resume $sid" C-m ;;
+    esac
+  done
+}
+
+case ${1:-} in
+save | restore) "$1" "${2:?state file required}" ;;
+*) echo "usage: $(basename "$0") save|restore <resurrect-state-file>" >&2; exit 1 ;;
+esac

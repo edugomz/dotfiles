@@ -68,6 +68,19 @@ Quitting nvim or claude leaves a shell in its window, so the window layout survi
 In claude, run `/config` and set notifications to the terminal bell.
 tmux then marks the window with `!` in the status bar and in the `prefix+w` tree when that agent needs input.
 
+### Save and restore the whole workspace
+
+[tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect) saves every session, window, split layout, cwd and nvim.
+[tmux-continuum](https://github.com/tmux-plugins/tmux-continuum) saves every 15 minutes and restores the last save when the tmux server starts.
+`bin/tmux-claude-resurrect` hooks into both, so each claude pane comes back with `claude --resume <its own session id>`, even with several claudes in one dir.
+
+- Save now: `prefix+Ctrl-s`.
+- Restore manually: `prefix+Ctrl-r`.
+- After a reboot, start plain `tmux` first and let it restore, then use `tp` / `prefix+T` as usual.
+  Running `tp` as the very first command also starts the server, but its new claude window can race with the restore.
+- Snapshots live in `~/.local/share/tmux/resurrect/`; `last` points to the newest.
+  The extra `claude` lines in each snapshot hold the pane to session id mapping.
+
 TODO
 
 - .gdbinit
