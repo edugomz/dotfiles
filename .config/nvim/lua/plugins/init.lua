@@ -74,6 +74,9 @@ require('lazy').setup({
     "nvim-telescope/telescope-frecency.nvim",
     opts = {
       db_safe_mode = false,
+      -- the CWD column prefixes each path with the workspace tail ("repo/"),
+      -- which reads like a path from the parent dir after a :tcd
+      show_filter_column = false,
     },
     config = function(_, opts)
       require("telescope").setup { extensions = { frecency = opts } }
