@@ -1,10 +1,18 @@
 #!/bin/sh
 # tp [dir] - one tmux session per project dir: window "nvim" + window "claude".
-# Re-running for a project that already has a session just switches to it.
+# Re-running for a project that already has a session just switches to it;
+# a closed project with a saved state (bin/tmux-sessions) is resumed with its windows.
 set -e
 dir=$(realpath "${1:-.}")
 # ponytail: session name = dir basename, two repos with the same basename share a session
 name=$(basename "$dir" | sed 's/^\.//; s/[.:]/_/g')
+
+sessions="$(dirname "$(realpath "$0")")/tmux-sessions"
+if ! tmux has-session -t "=$name" 2>/dev/null && "$sessions" has "$name"; then
+  # resume its saved windows instead of starting fresh (the next save would overwrite them)
+  quoted=$(printf '%s' "$name" | sed "s/'/'\\\\''/g")
+  tmux start-server \; run-shell "'$sessions' restore '$quoted'"
+fi
 
 if ! tmux has-session -t "=$name" 2>/dev/null; then
   # send-keys instead of a window command, so quitting nvim/claude leaves a shell

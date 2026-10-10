@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Per-session tmux-resurrect snapshots, so each project can be resumed on its own.
+#   save <state-file>   @resurrect-hook-post-save-layout: adds the claude lines, then writes
+#                       one file per open session; closed sessions keep their last file
+#   pick                fzf over the saved sessions that are not open (prefix+S)
+#   restore <name>...   brings those sessions back through resurrect's restore.sh
+#   has <name>          exit 0 if <name> has a saved state
+#   list | forget <name>
+set -euo pipefail
+store=${XDG_DATA_HOME:-$HOME/.local/share}/tmux/sessions
+bin=$(dirname "$(realpath "$0")")
+
+file_for() { printf '%s/%s.txt' "$store" "${1//\//_}"; }
+
+save() {
+  local state=$1 name f tmp
+  "$bin/tmux-claude-resurrect" save "$state"
+  mkdir -p "$store"
+  awk -F'\t' '$1 == "pane" { print $2 }' "$state" | sort -u | while IFS= read -r name; do
+    # unnamed sessions (0, 1, ...) are scratch, rename one (prefix+$) to keep it;
+    # __restoring ones are mid-restore (see restore)
+    [[ $name =~ ^[0-9]+$|__restoring[0-9]+$ ]] && continue
+    f=$(file_for "$name")
+    tmp=$(mktemp "$store/.tmp.XXXXXX")
+    s=$name awk -F'\t' '$2 == ENVIRON["s"] && ($1 == "pane" || $1 == "window" || $1 == "claude")' "$state" >"$tmp"
+    mv "$tmp" "$f"
+  done
+}
+
+# newest first: <name> TAB <padded name>  <saved at>  <window names>
+list() {
+  local open f name
+  open=$(tmux list-sessions -F '#S' 2>/dev/null || true)
+  [ -d "$store" ] || return 0
+  find "$store" -maxdepth 1 -name '*.txt' -printf '%T@\t%p\n' | sort -rn | cut -f2- | while IFS= read -r f; do
+    name=$(awk -F'\t' 'NR == 1 { print $2 }' "$f")
+    grep -Fxq -- "$name" <<<"$open" && continue
+    printf '%s\t%s\t%s\n' "$name" "$(date -r "$f" '+%b %d %H:%M')" \
+      "$(awk -F'\t' '$1 == "window" { sub(/^:/, "", $4); printf "%s%s", sep, $4; sep = "  " }' "$f")"
+  done | awk -F'\t' '{ r[NR] = $0; if (length($1) > m) m = length($1) }
+    END { for (i = 1; i <= NR; i++) { split(r[i], c, "\t"); printf "%s\t%-*s  %s  %s\n", c[1], m, c[1], c[2], c[3] } }'
+}
+
+pick() {
+  local picked
+  mapfile -t picked < <(list | fzf --reverse --multi --delimiter=$'\t' --with-nth=2.. --nth=1 \
+    --prompt='resume> ' --header='enter: resume  tab: mark  ctrl-x: forget' \
+    --bind "ctrl-x:execute-silent('$bin/tmux-sessions' forget {1})+reload('$bin/tmux-sessions' list)" |
+    cut -f1)
+  [ ${#picked[@]} -gt 0 ] || return 0
+  # run in the server, not in this popup: restoring can switch the client and kill session 0
+  tmux run-shell -b "$(printf '%q ' "$bin/tmux-sessions" restore "${picked[@]}")"
+}
+
+restore() {
+  local name f suffix=__restoring$$ # tmp and prev stay global for the EXIT trap
+  tmp=$(mktemp -d)
+  # resurrect targets sessions without "=", so tmux prefix-matches them: restoring "api" while
+  # "api-gateway" is open would land in api-gateway. Restore under a unique name, then rename.
+  for name; do
+    f=$(file_for "$name")
+    [ -f "$f" ] || { tmux display-message "no saved state for $name"; continue; }
+    s=$suffix awk 'BEGIN { FS = OFS = "\t" } { $2 = $2 ENVIRON["s"] } 1' "$f"
+  done >"$tmp/snapshot"
+  [ -s "$tmp/snapshot" ] || { rm -rf "$tmp"; return 0; }
+  printf 'state\t%s\t%s\n' "$1$suffix" "$(tmux display-message -p '#{client_session}' 2>/dev/null)" >>"$tmp/snapshot"
+  ln -s snapshot "$tmp/last"
+  # restore.sh only reads <@resurrect-dir>/last, so point it at this snapshot for the duration.
+  # ponytail: a save running meanwhile puts its full snapshot in $tmp (gone, the next one catches
+  # up); the per-session files it writes are kept
+  prev=$(tmux show-options -gqv @resurrect-dir)
+  trap 'if [ -n "$prev" ]; then tmux set -g @resurrect-dir "$prev"; else tmux set -gu @resurrect-dir; fi; rm -rf "$tmp"' EXIT
+  tmux set -g @resurrect-dir "$tmp"
+  # restore.sh is chatty on stderr (e.g. switching to a last session that is gone)
+  ~/.tmux/plugins/tmux-resurrect/scripts/restore.sh >/dev/null 2>&1 || true
+  for name; do
+    tmux rename-session -t "=$name$suffix" "$name" 2>/dev/null || true
+  done
+}
+
+case ${1:-} in
+save) save "${2:?state file required}" ;;
+restore) shift; restore "$@" ;;
+has) [ -f "$(file_for "${2:?name required}")" ] ;;
+forget) rm -f "$(file_for "${2:?name required}")" ;;
+list | pick) "$1" ;;
+*) sed -n '2,8s/^# \?//p' "$0" >&2; exit 1 ;;
+esac
