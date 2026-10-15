@@ -298,6 +298,15 @@ require('lazy').setup({
       local has_oq, oq = pcall(require, 'obsidian-query')
       require('render-markdown').setup({
         pipe_table = { enabled = false },
+        -- Markers of the agent-*-planning skills; `todo` replaces the default [-] clock
+        checkbox = {
+          -- stylua: ignore
+          custom = {
+            todo     = { raw = '[-]', rendered = '󰅘 ', highlight = 'RenderMarkdownError', scope_highlight = '@markup.strikethrough' },
+            progress = { raw = '[/]', rendered = '󰐋 ', highlight = 'RenderMarkdownWarn' },
+            parked   = { raw = '[~]', rendered = '󰏤 ', highlight = 'Comment' },
+          },
+        },
         custom_handlers = has_oq and {
           markdown = oq.handler,
           markdown_inline = require('obsidian-query.inline').handler,
