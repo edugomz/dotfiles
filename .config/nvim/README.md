@@ -8,7 +8,7 @@
 |---|---|---|
 | **Neovim 0.12+** | nvim-treesitter `main` branch, native LSP API (`vim.lsp.config`) | |
 | **Git** | lazy.nvim clones plugins on first launch | |
-| **C compiler** (gcc / clang) + **tree-sitter CLI** | nvim-treesitter (`main` branch) builds parsers | |
+| **C compiler** (gcc / clang) + **tree-sitter CLI 0.26.1+** | nvim-treesitter (`main` branch) builds parsers | |
 | **Node.js + npm** | pyright (LSP) | |
 | **Go** | Mason builds gopls | |
 | **curl, unzip, tar, gzip** | Mason downloads, vim-doge binary | |
@@ -17,7 +17,7 @@
 | **xxd** | hex.nvim | |
 | **ImageMagick** (`magick`, or `convert` + `identify`) | image.nvim | |
 
-`install.sh nvim` at the dotfiles root installs the missing ones (pacman or apt; on apt, nvim and tree-sitter come from their GitHub releases).
+`install.sh nvim` at the dotfiles root installs the missing ones (pacman or apt, with nvim and tree-sitter from the package manager or their GitHub releases, see `install.sh --help`).
 
 ## First launch
 
