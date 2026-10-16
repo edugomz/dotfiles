@@ -201,8 +201,15 @@ function setup() {
     tmux)
       [ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
       ~/.tmux/plugins/tpm/bin/install_plugins ;;
-    # needed for mini.nvim session save; lazy.nvim bootstraps itself on first nvim launch
-    nvim) mkdir -p ~/.local/share/nvim/session ;;
+    # The session dir is needed for mini.nvim session save. lazy.nvim installs missing plugins on
+    # launch but leaves existing checkouts alone, so an older checkout (nvim-treesitter on master)
+    # breaks the config: restore puts every plugin on its lazy-lock.json commit.
+    nvim)
+      mkdir -p ~/.local/share/nvim/session
+      if command -v nvim >/dev/null && ! too_old nvim; then
+        echo "Restoring nvim plugins to lazy-lock.json"
+        nvim --headless "+Lazy! restore" +qa >/dev/null 2>&1 || echo "Lazy restore failed: run :Lazy restore in nvim" >&2
+      fi ;;
   esac
 }
 
