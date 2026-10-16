@@ -67,6 +67,7 @@ map('n', '<leader>sw', function() require('spectre').open_visual({ select_word =
 map('n', '<leader>gs', '<cmd>tab Git<cr>')
 map('n', '<leader>gz', '<cmd>Git add %<cr>')
 map('n', '<leader>gw', function() require('config.worktrees').pick() end)
+map('n', '<leader>fs', function() require('config.ssh_files').pick() end)
 -- Pick a local branch (main/master preselected) and diff the current branch
 -- against where it forked from it.
 map('n', '<leader>gm', function()
