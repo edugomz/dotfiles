@@ -14,7 +14,8 @@
 
 `./install.sh` shows what each component (git, tmux, nvim, wezterm) is missing and installs the ones you pick.
 It defaults to every incomplete component; `./install.sh nvim tmux` skips the prompt, and `./install.sh --check` only shows the status.
-It asks whether nvim and tree-sitter come from the package manager or their GitHub releases (`--pm` or `--release` skips that); the default is releases on apt, whose versions are too old, and the package manager on pacman.
+It asks whether the nvim tools with an official release binary (nvim, tree-sitter, go, node/npm, rg, fd, clangd) come from the package manager or those releases, installed under `~/.local/opt` (`--pm` or `--release` skips that).
+The default is releases on apt, whose nvim and tree-sitter are too old, and the package manager on pacman; the other tools always come from the package manager.
 
 
 ## Project workflow (tmux, one session per project dir)

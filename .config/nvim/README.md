@@ -17,7 +17,7 @@
 | **xxd** | hex.nvim | |
 | **ImageMagick** (`magick`, or `convert` + `identify`) | image.nvim | |
 
-`install.sh nvim` at the dotfiles root installs the missing ones (pacman or apt, with nvim and tree-sitter from the package manager or their GitHub releases, see `install.sh --help`).
+`install.sh nvim` at the dotfiles root installs the missing ones (pacman or apt; nvim, tree-sitter, go, node/npm, rg, fd and clangd can come from their official releases instead, see `install.sh --help`).
 
 ## First launch
 
