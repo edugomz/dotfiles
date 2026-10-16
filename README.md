@@ -7,12 +7,13 @@
 - dependencies of https://github.com/vivien/i3blocks-contrib
 - rofi
 - feh
-- nvim
-  - rg
-  - fd
+- nvim, with the tools in `.config/nvim/README.md` "Requirements"
 - vimv
 - flameshot
 - xkblayout
+
+`./install.sh` shows what each component (git, tmux, nvim, wezterm) is missing and installs the ones you pick.
+It defaults to every incomplete component; `./install.sh nvim tmux` skips the prompt, and `./install.sh --check` only shows the status.
 
 
 ## Project workflow (tmux, one session per project dir)

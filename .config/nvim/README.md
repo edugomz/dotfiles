@@ -6,12 +6,18 @@
 
 | Dependency | Purpose | Notes |
 |---|---|---|
-| **Neovim 0.11+** | Native LSP API (`vim.lsp.config`) | |
+| **Neovim 0.12+** | nvim-treesitter `main` branch, native LSP API (`vim.lsp.config`) | |
 | **Git** | lazy.nvim clones plugins on first launch | |
-| **C compiler** (gcc / clang) | nvim-treesitter compiles parsers | |
-| **Node.js + npm** | pyright (LSP) and vim-doge | |
-| **ripgrep** (`rg`) | Telescope live grep, Spectre | |
-| **SQLite** (`libsqlite3`) | telescope-frecency database | |
+| **C compiler** (gcc / clang) + **tree-sitter CLI** | nvim-treesitter (`main` branch) builds parsers | |
+| **Node.js + npm** | pyright (LSP) | |
+| **Go** | Mason builds gopls | |
+| **curl, unzip, tar, gzip** | Mason downloads, vim-doge binary | |
+| **ripgrep** (`rg`), **fd** | Telescope live grep and file pickers, Spectre | |
+| **clangd** | C/C++ LSP, system-installed | |
+| **xxd** | hex.nvim | |
+| **ImageMagick** (`magick`, or `convert` + `identify`) | image.nvim | |
+
+`install.sh nvim` at the dotfiles root installs the missing ones (pacman or apt; on apt, nvim and tree-sitter come from their GitHub releases).
 
 ## First launch
 
