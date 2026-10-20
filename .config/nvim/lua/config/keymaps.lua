@@ -92,6 +92,15 @@ map('n', '<leader>gm', function()
     end,
   }):find()
 end)
+-- In :Flog, dv opens the commit under the cursor (or the selected range) in
+-- diffview, side by side, instead of flog's unified diff.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'floggraph',
+  callback = function(ev)
+    vim.keymap.set('n', 'dv', [[:<C-U>exec flog#Format('DiffviewOpen %h^!')<CR>]], { buffer = ev.buf, silent = true })
+    vim.keymap.set('x', 'dv', [[:<C-U>exec flog#Format("DiffviewOpen %(h'>)^..%(h'<)")<CR>]], { buffer = ev.buf, silent = true })
+  end,
+})
 
 -- LSP
 map('n', '<leader>ca', vim.lsp.buf.code_action)
