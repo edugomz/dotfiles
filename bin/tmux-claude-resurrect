@@ -32,7 +32,8 @@ restore() {
     target="=$session:$window.$pane"
     # only type into a pane that is sitting at a shell prompt
     case $(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null) in
-    zsh | bash | sh | fish) tmux send-keys -t "$target" "claude --resume $sid" C-m ;;
+    # a pane that is gone must not stop the others
+    zsh | bash | sh | fish) tmux send-keys -t "$target" "claude --resume $sid" C-m || true ;;
     esac
   done
 }

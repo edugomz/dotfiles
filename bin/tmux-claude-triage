@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Before prefix+S resumes saved sessions, ask a model which of their claude windows are stale,
+# then let the user confirm in fzf. Prints the windows to leave out, one "session:window" per line.
+#   tmux-claude-triage <saved-session-file>...   (bin/tmux-sessions pick runs it in the popup)
+# esc in the table, or a failed model call, keeps every window.
+set -euo pipefail
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+projects=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects
+
+# one JSON digest per claude pane: what the session was about and where it stopped
+digest() {
+  local session=$1 window=$2 sid=$3 title=$4 jsonl d cwd
+  jsonl=$(find "$projects" -maxdepth 2 -name "$sid.jsonl" -print -quit)
+  [ -n "$jsonl" ] || return 0
+  d=$(jq -sc --arg id "$session:$window" --arg title "$title" '
+    def text: (if type == "string" then . else map(select(.type == "text").text) | join(" ") end) | gsub("\\s+"; " ");
+    [.[] | select(.type == "user" and (.isMeta | not)) | .message.content | text
+      | select(length > 0 and ((startswith("<local-command") or startswith("<system-reminder")) | not))] as $u
+    | [.[] | select(.type == "assistant") | .message.content | text | select(length > 0)] as $a
+    | ([.[] | .cwd // empty] | last) as $cwd
+    | { id: $id,
+        title: ([.[] | select(.type == "custom-title").customTitle] | last // $title),
+        last_active: ([.[] | .timestamp // empty] | last),
+        cwd: $cwd,
+        prompts: ($u | length),
+        first_prompt: ($u[0] // "" | .[0:300]),
+        recent_prompts: ($u[-3:] | map(.[0:200])),
+        last_reply: ($a[-1] // "" | .[-800:]) }' "$jsonl")
+  cwd=$(jq -r '.cwd // ""' <<<"$d")
+  jq -c --argjson e "$([ -n "$cwd" ] && [ -d "$cwd" ] && echo true || echo false)" '. + {cwd_exists: $e}' <<<"$d"
+}
+
+for f; do
+  # pane titles carry claude's session name ("✳ worksys: Fix build ..."), the fallback title
+  awk -F'\t' '$1 == "pane" { t[$2 "\t" $3] = $7 } $1 == "claude" { print $2 "\t" $3 "\t" $5 "\t" t[$2 "\t" $3] }' "$f" | sort -t$'\t' -k2,2n
+done | while IFS=$'\t' read -r session window sid title; do
+  digest "$session" "$window" "$sid" "${title#* }"
+done >"$work/digests"
+
+n=$(wc -l <"$work/digests")
+[ "$n" -gt 0 ] || exit 0
+printf '\n  Reviewing %s claude windows for stale ones...\n' "$n" >&2
+
+schema='{"type":"object","required":["sessions"],"properties":{"sessions":{"type":"array","items":{"type":"object",
+"required":["id","stale","summary","reason"],"properties":{"id":{"type":"string"},"stale":{"type":"boolean"},
+"summary":{"type":"string"},"reason":{"type":"string"}}}}}}'
+system="You triage saved Claude Code sessions before a tmux workspace is restored. A session is STALE when \
+reopening it adds nothing: its task is done (committed, pushed, merged, question answered), it was abandoned, \
+another session in the list supersedes it, or its working directory no longer exists. It is LIVE when work or \
+a decision is still pending, or its last reply asks the user something. When unsure, call it live. \
+Return one entry per input id. summary: what the session is about, at most 60 characters. \
+reason: why it is stale or live, at most 120 characters, citing evidence from the session. \
+Never use the em dash character."
+# ponytail: one call for all windows; a slow or failed call just skips triage
+verdicts=$(jq -sc --arg now "$(date -u +%FT%TZ)" '{now: $now, sessions: .}' "$work/digests" |
+  (cd "$work" && timeout 90 claude -p --model sonnet --no-session-persistence --tools "" --strict-mcp-config \
+    --settings '{"disableAllHooks":true}' --system-prompt "$system" --output-format json --json-schema "$schema" \
+    "Triage the sessions in this JSON.") 2>/dev/null | jq -c '.structured_output.sessions // empty' 2>/dev/null) || true
+[ -n "$verdicts" ] || verdicts='[]'
+
+# one jq pass: the table (for the preview) and the rows; unjudged windows count as live
+jq -sc --argjson v "$verdicts" '
+  ($v | map({(.id): .}) | add // {}) as $by
+  | map(. + ($by[.id] // {stale: false, summary: (.recent_prompts[-1] // .title), reason: "not judged"})
+    + {when: (.last_active | sub("\\.[0-9]+Z$"; "Z") | fromdate | strflocaltime("%b %d %H:%M"))})' \
+  "$work/digests" >"$work/table.json"
+jq -r '(map(.id | length) | max) as $w | .[]
+  | [.id, (if .stale then " stale" else " live " end) + "  " + .id + " " * ($w - (.id | length))
+      + "  " + .when + "  " + .summary] | @tsv' "$work/table.json" >"$work/rows"
+cat >"$work/preview.jq" <<'EOF'
+.[] | select(.id == $id)
+| "\(.title)\n\nwhy: \(.reason)\n\nlast active: \(.when)   dir: \(.cwd)\(if .cwd_exists then "" else " (gone)" end)"
+  + "\n\nrecent prompts:\n- \(.recent_prompts | join("\n- "))"
+EOF
+
+# live rows start selected (= resume)
+start=$(awk -F'\t' '$2 !~ /^ stale/ { printf "pos(%d)+toggle+", NR }' "$work/rows")
+kept=$(fzf --reverse --multi --delimiter=$'\t' --with-nth=2.. --no-sort --marker='✓' \
+  --header=$'✓ = resume   tab: toggle   enter: confirm   esc: skip, resume all' \
+  --preview "jq -r --arg id {1} -f $work/preview.jq $work/table.json" --preview-window=down,16,wrap \
+  --bind "load:${start}first" \
+  --bind 'enter:become([ "$FZF_SELECT_COUNT" -gt 0 ] && printf "%s\n" {+1} || true)' <"$work/rows") || exit 0
+
+cut -f1 "$work/rows" | grep -Fxv -f <(printf '%s\n' "$kept") || true

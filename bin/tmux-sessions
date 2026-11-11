@@ -2,8 +2,11 @@
 # Per-session tmux-resurrect snapshots, so each project can be resumed on its own.
 #   save <state-file>   @resurrect-hook-post-save-layout: adds the claude lines, then writes
 #                       one file per open session; closed sessions keep their last file
-#   pick                fzf over the saved sessions that are not open (prefix+S)
-#   restore <name>...   brings those sessions back through resurrect's restore.sh
+#   pick                fzf over the saved sessions that are not open (prefix+S), then
+#                       bin/tmux-claude-triage to leave out windows with stale claude sessions
+#   restore [-d <session>:<window>]... <name>...
+#                       brings those sessions back through resurrect's restore.sh, without the -d windows
+#                       and windows that are only an idle shell
 #   has <name>          exit 0 if <name> has a saved state
 #   list | forget <name>
 set -euo pipefail
@@ -48,19 +51,46 @@ pick() {
     --bind "ctrl-x:execute-silent('$bin/tmux-sessions' forget {1})+reload('$bin/tmux-sessions' list)" |
     cut -f1)
   [ ${#picked[@]} -gt 0 ] || return 0
+  # windows whose claude session the user agreed is stale (see bin/tmux-claude-triage)
+  local name files=() stale=() drops=()
+  for name in "${picked[@]}"; do [ ! -f "$(file_for "$name")" ] || files+=("$(file_for "$name")"); done
+  mapfile -t stale < <("$bin/tmux-claude-triage" "${files[@]}" || true)
+  for name in "${stale[@]}"; do drops+=(-d "$name"); done
   # run in the server, not in this popup: restoring can switch the client and kill session 0
-  tmux run-shell -b "$(printf '%q ' "$bin/tmux-sessions" restore "${picked[@]}")"
+  tmux run-shell -b "$(printf '%q ' "$bin/tmux-sessions" restore "${drops[@]}" "${picked[@]}")"
 }
 
 restore() {
-  local name f suffix=__restoring$$ # tmp and prev stay global for the EXIT trap
+  local name f suffix=__restoring$$ drop=() # tmp and prev stay global for the EXIT trap
+  while [ "${1:-}" = -d ]; do drop+=("$2"); shift 2; done
   tmp=$(mktemp -d)
   # resurrect targets sessions without "=", so tmux prefix-matches them: restoring "api" while
   # "api-gateway" is open would land in api-gateway. Restore under a unique name, then rename.
   for name; do
     f=$(file_for "$name")
     [ -f "$f" ] || { tmux display-message "no saved state for $name"; continue; }
-    s=$suffix awk 'BEGIN { FS = OFS = "\t" } { $2 = $2 ENVIRON["s"] } 1' "$f"
+    # Leaves out the -d windows and windows that are only idle shells (every pane at a shell prompt,
+    # no claude session); if that leaves nothing, the first idle shell stays so the session opens.
+    # Pane indexes follow pane-base-index at save time; shift each window's to the current base,
+    # or resurrect and the claude hook target panes that do not exist (files saved with base 0).
+    s=$suffix d=$(printf '%s\n' "${drop[@]}") b=$(tmux show-options -gwv pane-base-index) awk '
+      BEGIN { FS = OFS = "\t"; split(ENVIRON["d"], d, "\n"); for (i in d) skip[d[i]] }
+      NR == FNR {
+        k = $2 ":" $3
+        if ($1 == "pane") {
+          if (!(k in lo) || $6 < lo[k]) lo[k] = $6
+          if ($10 !~ /^(zsh|bash|sh|fish)$/) busy[k]
+        }
+        if ($1 == "claude") busy[k]
+        if ($1 == "window" && first == "" && !(k in skip)) first = k
+        next
+      }
+      FNR == 1 { n = 0; for (k in busy) if (!(k in skip)) n++; if (n == 0 && first != "") busy[first] }
+      (($2 ":" $3) in busy) && !(($2 ":" $3) in skip) {
+        if ($1 == "pane") $6 += ENVIRON["b"] - lo[$2 ":" $3]
+        if ($1 == "claude") $4 += ENVIRON["b"] - lo[$2 ":" $3]
+        $2 = $2 ENVIRON["s"]; print
+      }' "$f" "$f"
   done >"$tmp/snapshot"
   [ -s "$tmp/snapshot" ] || { rm -rf "$tmp"; return 0; }
   printf 'state\t%s\t%s\n' "$1$suffix" "$(tmux display-message -p '#{client_session}' 2>/dev/null)" >>"$tmp/snapshot"
@@ -75,6 +105,13 @@ restore() {
   ~/.tmux/plugins/tmux-resurrect/scripts/restore.sh >/dev/null 2>&1 || true
   for name; do
     tmux rename-session -t "=$name$suffix" "$name" 2>/dev/null || true
+    # close the gaps left by dropped windows
+    tmux move-window -r -t "=$name" 2>/dev/null || true
+    # resurrect leaves panes at their saved layout size (e.g. 238x54 inside a 150x39 window); re-fit
+    # each window, then unset the manual window-size that resize-window sets so it follows the client
+    tmux list-windows -t "=$name" -F '#{window_id}' 2>/dev/null | while IFS= read -r w; do
+      tmux resize-window -t "$w" && tmux set-option -wu -t "$w" window-size || true
+    done
   done
 }
 
@@ -84,5 +121,5 @@ restore) shift; restore "$@" ;;
 has) [ -f "$(file_for "${2:?name required}")" ] ;;
 forget) rm -f "$(file_for "${2:?name required}")" ;;
 list | pick) "$1" ;;
-*) sed -n '2,8s/^# \?//p' "$0" >&2; exit 1 ;;
+*) sed -n '2,10s/^# \?//p' "$0" >&2; exit 1 ;;
 esac
