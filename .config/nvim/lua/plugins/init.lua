@@ -203,6 +203,10 @@ require('lazy').setup({
           map('<leader>gh', gs.preview_hunk)
           map('<leader>gd', gs.diffthis)
           map('<leader>gu', gs.reset_hunk)
+          map('<leader>ga', gs.stage_hunk)
+          vim.keymap.set('x', '<leader>ga', function()
+            gs.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
+          end, { silent = true, buffer = bufnr })
           map(']c', function() gs.nav_hunk('next') end)
           map('[c', function() gs.nav_hunk('prev') end)
         end,
